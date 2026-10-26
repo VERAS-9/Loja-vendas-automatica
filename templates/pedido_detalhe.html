@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido #{{ pedido.id }} - Sniper Arena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* --- CONTAINER DO CHAT ESTILO APP (LARGO) --- */
+        .chat-wrapper {
+            width: 95%;
+            max-width: 1100px;
+            height: 75vh;
+            margin: 15px auto 30px auto;
+            background: #1a1e29;
+            border-radius: 12px;
+            border: 1px solid #2a2f3d;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; /* Impede que o rodapé esmague o chat */
+        }
+        
+        .chat-header {
+            background: #1f2430;
+            padding: 15px 20px;
+            border-bottom: 1px solid #2a2f3d;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+
+        .chat-messages-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #12141c;
+        }
+
+        .msg-row { display: flex; width: 100%; }
+        .msg-row.me { justify-content: flex-end; }
+        .msg-row.other { justify-content: flex-start; }
+
+        .msg-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .msg-bubble.me { background: #2563eb; color: #fff; border-top-right-radius: 2px; }
+        .msg-bubble.other { background: #2a2f3d; color: #fff; border-top-left-radius: 2px; }
+        .msg-bubble.other strong { color: #f59e0b; display: block; font-size: 11px; margin-bottom: 4px; }
+
+        .msg-time { display: block; font-size: 10px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 5px; }
+
+        /* Área de Digitar */
+        .chat-input-area {
+            padding: 15px 20px;
+            background: #1f2430;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-top: 1px solid #2a2f3d;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px 18px;
+            border-radius: 20px;
+            border: none;
+            background: #12141c;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .chat-btn {
+            background: #2563eb;
+            border: none;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .chat-btn:hover { background: #1d4ed8; }
+        .chat-btn svg { fill: white; width: 18px; height: 18px; }
+
+        /* Badges de status */
+        .badge-status { display: inline-block; padding: 5px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; }
+        .status-aprovado { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+        .status-recusado { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        .status-pendente { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid #eab308; }
+
+        /* Botão de Voltar */
+        .btn-voltar-produtos {
+            display: inline-flex;
+            align-items: center;
+            background: #1f2937;
+            color: #38bdf8;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #374151;
+            transition: all 0.2s;
+        }
+        .btn-voltar-produtos:hover { background: #374151; color: #60a5fa; transform: translateY(-2px); }
+
+        @media (max-width: 768px) {
+            .chat-wrapper { width: 100%; height: 85vh; border-radius: 0; border: none; margin: 10px 0; }
+        }
+    </style>
+</head>
+<body style="background: #0b0f19;">
+    
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="logo">🎯 Sniper Arena Store</div>
+        <nav style="display: flex; align-items: center; gap: 15px;">
+            <a href="/">Início</a>
+            <a href="/pacotes">Produtos</a>
+            <a href="/quantidade">Calculadora</a>
+            <a href="/termos">Termos</a>
+            
+            {% if usuario_logado %}
+                {% if session.get('role') == 'admin' %}
+                    <a href="/admin" style="background: #d97706; padding: 6px 12px; border-radius: 6px; color: white; text-decoration: none; font-weight: bold;">⚙️ Painel Admin</a>
+                {% endif %}
+                
+                <a href="/perfil" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                    {% if session.get('foto') %}
+                        <img src="{{ session.get('foto') }}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #38bdf8;">
+                    {% endif %}
+                    <span style="color: #4ade80; font-weight: bold;">{{ usuario_logado }}</span>
+                </a>
+                <a href="/logout" style="background: #dc2626; padding: 6px 12px; border-radius: 6px; color: white; text-decoration: none;">Sair</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <!-- BOTÃO VOLTAR -->
+    <div style="width: 95%; max-width: 1100px; margin: 25px auto 0 auto; display: flex; justify-content: flex-start;">
+        <a href="/pacotes" class="btn-voltar-produtos">
+            ← Voltar para Produtos
+        </a>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chat-wrapper">
+        <div class="chat-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.85rem; color: #94a3b8;">
+                    <a href="/perfil" style="color: #38bdf8; text-decoration: none;">Minha Conta</a> > 
+                    <a href="/perfil" style="color: #38bdf8; text-decoration: none;">Minhas Compras</a> > 
+                    <span style="color: #fff;">Pedido #{{ pedido.id }}</span>
+                </div>
+                <div>
+                    {% if pedido.status == 'Aprovado' %}
+                        <span class="badge-status status-aprovado">Aprovado</span>
+                    {% elif pedido.status == 'Recusado' %}
+                        <span class="badge-status status-recusado">Recusado</span>
+                    {% else %}
+                        <span class="badge-status status-pendente">Pendente</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid #2a2f3d; margin: 5px 0;">
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <h3 style="margin: 0 0 5px 0; color: #38bdf8; font-size: 1.1rem;">📦 {{ pedido.produto }} - {{ pedido.preco }}</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #cbd5e1;">Nick Roblox: <strong style="color: #fff;">{{ pedido.nick_roblox }}</strong></p>
+                </div>
+                <div style="font-size: 0.85rem; color: #94a3b8; text-align: right;">
+                    Cliente:<br><strong style="color: #fff;">{{ pedido.cliente_nome }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div id="historicoChat" class="chat-messages-area">
+            {% if mensagens %}
+                {% for msg in mensagens %}
+                    {% if msg.remetente|lower == 'admin' %}
+                        <div class="msg-row other">
+                            <div class="msg-bubble other">
+                                <strong>⚙️ Administrador ({{ msg.username }})</strong>
+                                {{ msg.mensagem }}
+                                <span class="msg-time">{{ msg.data_envio }}</span>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="msg-row me">
+                            <div class="msg-bubble me">
+                                {{ msg.mensagem }}
+                                <span class="msg-time">{{ msg.data_envio }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p style="text-align: center; color: #94a3b8; font-style: italic; padding: 20px;">Ainda não há mensagens neste pedido. Envie uma mensagem abaixo para iniciar o atendimento.</p>
+            {% endif %}
+        </div>
+
+        <div class="chat-input-area">
+            <input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" id="inputMensagem" placeholder="Digite sua mensagem..." class="chat-input" onkeypress="if(event.key === 'Enter') enviarMensagem()">
+            <button type="button" onclick="enviarMensagem()" class="chat-btn">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- RODAPÉ PROFISSIONAL -->
+    <footer class="footer-site">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo">🎯 Sniper Arena Store</div>
+                <p class="footer-desc">Produtos digitais para jogos com entrega online e suporte ao cliente.</p>
+                <p class="footer-atendimento-titulo">Atendimento todos os dias</p>
+                <p class="footer-atendimento-hora">09:00 às 20:30</p>
+            </div>
+            <div class="footer-col">
+                <h3>Informações</h3>
+                <ul class="footer-links">
+                    <li><a href="/">Início</a></li>
+                    <li><a href="/termos">Termos e Condições</a></li>
+                    <li><a href="/privacidade">Política de Privacidade</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Precisa de ajuda?</h3>
+                <p class="footer-subtext">Clique em um dos canais abaixo para falar com a gente.</p>
+                <div class="footer-cards-ajuda">
+                    <a href="https://discord.gg/ubEDvqwfsx" target="_blank" class="card-ajuda discord">
+                        <span>💬 Suporte Ativo</span>
+                        <strong>DISCORD</strong>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <hr class="footer-divider">
+        <div class="footer-bottom">
+            <div class="footer-info-legal">
+                <p><strong>Loja Oficial Sniper Arena — Renan de S. Prates</strong></p>
+                <p class="aviso-roblox">A Sniper Arena Store é uma loja independente e não possui vínculo oficial, patrocínio ou afiliação com a Roblox Corporation ou com os desenvolvedores dos jogos mencionados neste site.</p>
+            </div>
+            <div class="footer-copyright">
+                <p>© 2026 Loja Sniper Arena. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        var chatHistorico = document.getElementById('historicoChat');
+        if(chatHistorico) {
+            chatHistorico.scrollTop = chatHistorico.scrollHeight;
+        }
+
+                function enviarMensagem() {
+            var input = document.getElementById('inputMensagem');
+            var mensagem = input.value.trim();
+            var csrfToken = document.getElementById('csrf_token').value; 
+
+            if (!mensagem) return;
+
+            fetch('/pedido/{{ pedido.id }}/enviar_mensagem', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken // NOVO: Envia o token no cabeçalho
+                },
+                body: JSON.stringify({ mensagem: mensagem })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.sucesso) {
+                    location.reload();
+                } else {
+                    alert("Erro ao enviar mensagem: " + data.mensagem);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Erro de conexão.");
+            });
+        }
+    </script>
+</body>
+</html>

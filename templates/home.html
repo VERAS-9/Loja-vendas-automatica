@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Início - Loja Sniper Arena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">🎯 Sniper Arena Store</div>
+        <nav>
+            <a href="/">Início</a>
+            <a href="/pacotes">Produtos</a>
+            <a href="/kits">Venda de Kits</a>
+            <a href="/termos">Termos</a>
+        </nav>
+    </header>
+
+    <section class="hero" style="padding: 40px 20px;">
+        <h1>Central de Vendas Automática</h1>
+        <p style="font-size: 1.1rem; color: #94a3b8; margin-bottom: 40px;">Escolha uma das opções abaixo para iniciar o seu pedido via Pix de forma 100% segura.</p>
+        
+        <!-- Usando a mesma estrutura de grade/cards da loja para alinhar lado a lado -->
+        <div class="categorias-grid" style="display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; max-width: 800px; margin: 0 auto;">
+            
+            <div class="cat-card" style="background-color: rgba(17, 24, 39, 0.85); backdrop-filter: blur(8px); border-radius: 12px; padding: 30px; border: 1px solid #1f2937; width: 320px; text-align: center; transition: transform 0.2s, border-color 0.2s;">
+                <h3 style="color: #ffffff; font-size: 1.3rem; margin-bottom: 15px;">📦 Pacotes Disponíveis</h3>
+                <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 25px; min-height: 45px;">Veja os pacotes prontos de Cash, Passes e Caixas promocionais.</p>
+                <a href="/pacotes" class="btn-cat" style="display: block; background-color: #2563eb; color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: background 0.2s;">Acessar Pacotes</a>
+            </div>
+
+            <div class="cat-card" style="background-color: rgba(17, 24, 39, 0.85); backdrop-filter: blur(8px); border-radius: 12px; padding: 30px; border: 1px solid #1f2937; width: 320px; text-align: center; transition: transform 0.2s, border-color 0.2s;">
+                <h3 style="color: #ffffff; font-size: 1.3rem; margin-bottom: 15px;">⚙️ Escolher por Quantidade</h3>
+                <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 25px; min-height: 45px;">Digite exatamente quantos itens você quer e calcule o valor na hora.</p>
+                <a href="/quantidade" class="btn-cat" style="display: block; background-color: #059669; color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: background 0.2s;">Personalizar Quantidade</a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Novo Rodapé Profissional de 3 Colunas -->
+    <footer class="footer-site">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo">🎯 Sniper Arena Store</div>
+                <p class="footer-desc">Produtos digitais para jogos com entrega online e suporte ao cliente.</p>
+                <p class="footer-atendimento-titulo">Atendimento todos os dias</p>
+                <p class="footer-atendimento-hora">09:00 às 20:30</p>
+            </div>
+            <div class="footer-col">
+                <h3>Informações</h3>
+                <ul class="footer-links">
+                    <li><a href="/">Início</a></li>
+                    <li><a href="/termos">Termos e Condições</a></li>
+                    <li><a href="/privacidade">Política de Privacidade</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Precisa de ajuda?</h3>
+                <p class="footer-subtext">Clique em um dos canais abaixo para falar com a gente.</p>
+                <div class="footer-cards-ajuda">
+                    <a href="https://discord.gg/ubEDvqwfsx" target="_blank" class="card-ajuda discord">
+                        <span>💬 Suporte Ativo</span>
+                        <strong>DISCORD</strong>
+                    </a>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <hr class="footer-divider">
+        <div class="footer-bottom">
+            <div class="footer-info-legal">
+                <p><strong>Loja Oficial Sniper Arena — Renan de S. Prates</strong></p>
+                <p class="aviso-roblox">A Sniper Arena Store é uma loja independente e não possui vínculo oficial, patrocínio ou afiliação com a Roblox Corporation ou com os desenvolvedores dos jogos mencionados neste site.</p>
+            </div>
+            <div class="footer-copyright">
+                <p>© 2026 Loja Sniper Arena. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

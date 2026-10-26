@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Palavra-passe - Sniper Arena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body style="background: #0b0f19; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+    <div style="background: #111827; border: 1px solid #1f2937; padding: 30px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+        <h2 style="margin-top: 0; color: #38bdf8; text-align: center; font-size: 1.4rem;">Redefinir Palavra-passe</h2>
+        <p style="color: #94a3b8; font-size: 0.85rem; text-align: center; margin-bottom: 20px;">Insere a tua nova palavra-passe abaixo.</p>
+        
+        {% if erro %}
+        <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 15px; text-align: center;">
+            {{ erro }}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label style="display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold;">Nova Palavra-passe:</label>
+            <input type="password" name="senha" placeholder="********" required style="width: 100%; padding: 10px; border-radius: 6px; background: #0b0f19; border: 1px solid #374151; color: white; box-sizing: border-box; margin-bottom: 15px;">
+            
+            <button type="submit" style="background: #059669; color: white; border: none; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer;">Salvar Nova Palavra-passe</button>
+        </form>
+    </div>
+</body>
+</html>

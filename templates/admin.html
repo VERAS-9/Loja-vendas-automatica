@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Sniper Arena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .admin-container { max-width: 1000px; margin: 30px auto; padding: 0 20px; color: #fff; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #111827; border: 1px solid #1f2937; padding: 20px; border-radius: 10px; text-align: center; }
+        .stat-card h3 { color: #94a3b8; font-size: 0.9rem; margin-bottom: 5px; }
+        .stat-card p { font-size: 1.8rem; color: #4ade80; font-weight: bold; margin: 0; }
+        table { width: 100%; border-collapse: collapse; background: #111827; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #1f2937; font-size: 0.9rem; }
+        th { background: #1f2937; color: #38bdf8; }
+        tr:hover { background: rgba(31, 41, 55, 0.5); }
+        .btn-aprovar { background: #059669; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 4px; }
+        .btn-aprovar:hover { background: #047857; }
+        .btn-recusar { background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn-recusar:hover { background: #b91c1c; }
+        .btn-resetar { background: #7c3aed; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+        .btn-resetar:hover { background: #6d28d9; }
+        .filtro-btn { background: #1f2937; color: #cbd5e1; border: 1px solid #374151; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: bold; }
+        .filtro-btn.ativo { background: #2563eb; color: white; border-color: #3b82f6; }
+        .status-aprovado { background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .status-recusado { background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .status-pendente { background: rgba(59, 130, 246, 0.2); color: #38bdf8; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-box {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+    </style>
+</head>
+<body style="background: #0b0f19;">
+    <header class="navbar">
+        <div class="logo">🎯 Sniper Arena - Admin</div>
+        <nav style="display: flex; align-items: center; gap: 15px;">
+            <a href="/pacotes">Ver Loja</a>
+            <span style="color: #4ade80; font-weight: bold;">👤 {{ usuario_logado }} (Admin)</span>
+            <a href="/logout" style="background: #dc2626; padding: 6px 12px; border-radius: 6px; color: white; text-decoration: none;">Sair</a>
+        </nav>
+    </header>
+
+    <div class="admin-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <div>
+                <h2>Painel de Gestão e Vendas</h2>
+                <p style="color: #94a3b8; margin: 5px 0 0 0;">Acompanhe o desempenho da loja e o resumo financeiro.</p>
+            </div>
+            <button type="button" class="btn-resetar" onclick="abrirConfirmacaoReset()">🗑️ Limpar Todos os Pedidos</button>
+        </div>
+
+        <!-- CARTÕES DE ESTATÍSTICAS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Valor Total em Vendas</h3>
+                <p>R$ {{ valor_total }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total de Pedidos Realizados</h3>
+                <p style="color: #38bdf8;">{{ pedidos|length }}</p>
+            </div>
+        </div>
+
+        <!-- FILTROS DE STATUS -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+            <span style="color: #94a3b8; font-size: 0.9rem; font-weight: bold;">Filtrar por:</span>
+            <a href="/admin?status=todos" class="filtro-btn {% if filtro_atual == 'todos' %}ativo{% endif %}">Todos</a>
+            <a href="/admin?status=Pendente" class="filtro-btn {% if filtro_atual == 'Pendente' %}ativo{% endif %}">Pendentes</a>
+            <a href="/admin?status=Aprovado" class="filtro-btn {% if filtro_atual == 'Aprovado' %}ativo{% endif %}">Aprovados</a>
+            <a href="/admin?status=Recusado" class="filtro-btn {% if filtro_atual == 'Recusado' %}ativo{% endif %}">Recusados</a>
+        </div>
+
+        <!-- TABELA DE HISTÓRICO DE PEDIDOS -->
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Utilizador Site</th>
+                        <th>Nick Roblox</th>
+                        <th>Produto</th>
+                        <th>Preço</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pedidos %}
+                    <tr>
+                        <td>#{{ p.id }}</td>
+                        <td>{{ p.username if p.username else 'Convidado' }}</td>
+                        <td style="color: #4ade80; font-weight: bold;">{{ p.nick_roblox }}</td>
+                        <td>{{ p.produto }}</td>
+                        <td>{{ p.preco }}</td>
+                        <td>
+                            {% if p.status == 'Aprovado' %}
+                                <span class="status-aprovado">Aprovado</span>
+                            {% elif p.status == 'Recusado' %}
+                                <span class="status-recusado">Recusado</span>
+                            {% else %}
+                                <span class="status-pendente">Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.status == 'Pendente' %}
+                                <button type="button" class="btn-aprovar" onclick="abrirConfirmacao('aprovar', '{{ p.id }}')">✔ Aprovar</button>
+                                <button type="button" class="btn-recusar" onclick="abrirConfirmacao('recusar', '{{ p.id }}')">✖ Recusar</button>
+                            {% else %}
+                                <span style="color: #94a3b8; font-size: 0.8rem;">Finalizado</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #94a3b8; padding: 20px;">Nenhum pedido encontrado com este filtro.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Customizado de Confirmação -->
+    <div id="modalConfirmacao" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modalTitulo" style="color: #38bdf8; margin-top: 0; font-size: 1.3rem;">Confirmar Ação</h3>
+            <p id="modalMensagem" style="color: #cbd5e1; font-size: 0.95rem; margin-bottom: 20px;">Tens a certeza?</p>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="fecharConfirmacao()" style="background: #374151; color: white; border: none; flex: 1; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer;">Cancelar</button>
+                <button type="button" id="btnConfirmarAcao" style="background: #059669; color: white; border: none; flex: 1; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pedidoSelecionadoId = null;
+        let acaoSelecionadaTipo = null;
+
+        function abrirConfirmacao(tipo, id) {
+            pedidoSelecionadoId = id;
+            acaoSelecionadaTipo = tipo;
+            let titulo = document.getElementById('modalTitulo');
+            let mensagem = document.getElementById('modalMensagem');
+            let btnConfirmar = document.getElementById('btnConfirmarAcao');
+
+            if (tipo === 'aprovar') {
+                titulo.innerText = "Aprovar Pedido #" + id;
+                mensagem.innerText = "Tens a certeza que queres aprovar este pedido e enviar o aviso para o Discord?";
+                btnConfirmar.style.background = "#059669";
+                btnConfirmar.innerText = "Sim, Aprovar";
+            } else {
+                titulo.innerText = "Recusar Pedido #" + id;
+                mensagem.innerText = "Tens a certeza que queres recusar este pedido?";
+                btnConfirmar.style.background = "#dc2626";
+                btnConfirmar.innerText = "Sim, Recusar";
+            }
+            document.getElementById('modalConfirmacao').style.display = 'flex';
+        }
+
+        function abrirConfirmacaoReset() {
+            pedidoSelecionadoId = 'reset';
+            acaoSelecionadaTipo = 'reset';
+            let titulo = document.getElementById('modalTitulo');
+            let mensagem = document.getElementById('modalMensagem');
+            let btnConfirmar = document.getElementById('btnConfirmarAcao');
+
+            titulo.innerText = "Limpar Todos os Pedidos";
+            mensagem.innerText = "Atenção! Tens a certeza absoluta que queres APAGAR TODO O HISTÓRICO de vendas?";
+            btnConfirmar.style.background = "#7c3aed";
+            btnConfirmar.innerText = "Sim, Limpar Tudo";
+            document.getElementById('modalConfirmacao').style.display = 'flex';
+        }
+
+        function fecharConfirmacao() {
+            document.getElementById('modalConfirmacao').style.display = 'none';
+            pedidoSelecionadoId = null;
+            acaoSelecionadaTipo = null;
+        }
+
+        document.getElementById('btnConfirmarAcao').onclick = function() {
+            if (!pedidoSelecionadoId || !acaoSelecionadaTipo) return;
+            let url = '';
+            if (acaoSelecionadaTipo === 'aprovar') url = '/admin/aprovar/' + pedidoSelecionadoId;
+            else if (acaoSelecionadaTipo === 'recusar') url = '/admin/recusar/' + pedidoSelecionadoId;
+            else if (acaoSelecionadaTipo === 'reset') url = '/admin/resetar';
+
+            fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+            .then(res => res.json())
+            .then(data => {
+                if (data.sucesso) window.location.reload();
+                else { alert("Erro: " + data.mensagem); fecharConfirmacao(); }
+            })
+            .catch(err => { console.error(err); alert("Erro de conexão."); fecharConfirmacao(); });
+        };
+    </script>
+</body>
+</html>

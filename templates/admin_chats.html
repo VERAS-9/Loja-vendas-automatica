@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Central de Atendimento - Admin</title>
+    <!-- Adapte o CSS para o seu, estou usando um básico para funcionar -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .chat-container { max-width: 800px; margin: 50px auto; padding: 20px; background: #1a1e29; border-radius: 8px; color: white; }
+        .chat-item { display: block; padding: 15px; margin-bottom: 10px; background: #2a2f3d; color: white; text-decoration: none; border-radius: 5px; border-left: 4px solid #00ff88; }
+        .chat-item:hover { background: #3a3f4d; }
+        .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 12px; background: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h2>💬 Central de Atendimento</h2>
+        <p>Clique em um pedido para ver e responder as mensagens.</p>
+
+        {% if chats %}
+            {% for chat in chats %}
+                <a href="{{ url_for('admin_chat_individual', pedido_id=chat[0]) }}" class="chat-item">
+                    <strong>Pedido #{{ chat[0] }} - {{ chat[1] }}</strong><br>
+                    <small>Cliente: {{ chat[4] }} | Nick Roblox: {{ chat[2] }}</small><br>
+                    <span class="status-badge">{{ chat[3] }}</span>
+                </a>
+            {% endfor %}
+        {% else %}
+            <p>Nenhuma conversa iniciada ainda.</p>
+        {% endif %}
+        
+        <br>
+        <a href="/" style="background: #2563eb; padding: 8px 16px; border-radius: 6px; color: white; text-decoration: none; display: inline-block; margin-top: 15px; font-weight: bold;">← Voltar para a Loja</a>
+        
+    </div>
+</body>
+</html>

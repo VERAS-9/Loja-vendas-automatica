@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora e Quantidade - Sniper Arena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .calc-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #111827;
+            border: 1px solid #1f2937;
+            padding: 30px;
+            border-radius: 12px;
+            color: #fff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        .calc-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            background: #0b0f19;
+            border: 1px solid #374151;
+            color: white;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        .calc-select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            background: #0b0f19;
+            border: 1px solid #374151;
+            color: white;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        .calc-btn {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .calc-btn:hover {
+            background: #1d4ed8;
+        }
+        .resultado-box {
+            margin-top: 20px;
+            background: #0b0f19;
+            border: 1px solid #1f2937;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .btn-pix {
+            width: 100%;
+            padding: 12px;
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .btn-pix:hover {
+            background: #047857;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-box {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.3rem;
+            cursor: pointer;
+        }
+        .modal-close:hover { color: #fff; }
+        .pix-box {
+            background: #0b0f19;
+            border: 1px dashed #38bdf8;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 5px 0 10px 0;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body style="background: #0b0f19;">
+    <header class="navbar">
+        <div class="logo">🎯 Sniper Arena Store</div>
+        <nav style="display: flex; align-items: center; gap: 15px;">
+            <a href="/">Início</a>
+            <a href="/pacotes">Produtos</a>
+            <a href="/quantidade">Calculadora</a>
+            <a href="/termos">Termos</a>
+            
+            {% if usuario_logado %}
+                {% if session.get('role') == 'admin' %}
+                    <a href="/admin" style="background: #d97706; padding: 6px 12px; border-radius: 6px; color: white; text-decoration: none; font-weight: bold;">⚙️ Painel Admin</a>
+                {% endif %}
+                
+                <!-- Foto colada ao nome unificada -->
+                <a href="/perfil" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                    {% if session.get('foto') %}
+                        <img src="{{ session.get('foto') }}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #38bdf8;">
+                    {% endif %}
+                    <span style="color: #4ade80; font-weight: bold;">{{ usuario_logado }}</span>
+                </a>
+
+                <a href="/logout" style="background: #dc2626; padding: 6px 12px; border-radius: 6px; color: white; text-decoration: none;">Sair</a>
+            {% else %}
+                <button type="button" onclick="window.location.href='/pacotes'" style="background: #2563eb; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Entrar</button>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div style="padding: 20px;">
+        <a href="/pacotes" style="color: #38bdf8; text-decoration: none; font-weight: bold; background: rgba(17, 24, 39, 0.8); padding: 8px 14px; border-radius: 6px; border: 1px solid #1f2937; display: inline-block; margin-bottom: 20px;">← Voltar ao Início</a>
+    </div>
+
+    <div class="calc-container">
+        <h2 style="margin-top: 0; color: #fff; text-align: center; margin-bottom: 25px; font-size: 1.5rem;">Calculadora de Quantidade</h2>
+        
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold; font-size: 0.9rem;">Escolha o Item:</label>
+            <select name="tipo" class="calc-select" required>
+                <option value="cash" {% if item == 'Cash (Unidade)' %}selected{% endif %}>Cash (Unidade | 1 = R$ 0,0035)</option>
+                <option value="passe" {% if item == 'Passe de Batalha' %}selected{% endif %}>Passe de Batalha - R$ 25,00</option>
+                <option value="caixa" {% if item == 'Caixa Secreta' %}selected{% endif %}>Caixa Secreta - R$ 2,00</option>
+            </select>
+
+            <label style="display: block; margin-bottom: 8px; font-weight: bold; font-size: 0.9rem;">Quantidade:</label>
+            <input type="number" name="quantidade" value="{{ qtd }}" min="1" class="calc-input" required>
+
+            <button type="submit" class="calc-btn">Calcular Preço Total</button>
+        </form>
+
+        {% if total is not none %}
+        <div class="resultado-box">
+            <p style="margin: 0; font-size: 0.9rem; color: #94a3b8;">Resumo do Pedido</p>
+            <p style="margin: 8px 0; font-size: 1rem; color: #fff;" id="textoItemResumo">Item: <strong>{{ item }}</strong> (Qtd: {{ qtd }})</p>
+            <p style="margin: 15px 0 5px 0; font-size: 1.3rem; color: #4ade80;" id="textoTotalResumo">Total: <strong>R$ {{ total }}</strong></p>
+            <button type="button" onclick="abrirCheckoutCalculadora()" class="btn-pix">Gerar QR Code Pix</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Modal de Checkout / Pix -->
+    <div id="modalCheckout" class="modal-overlay">
+        <div class="modal-box">
+            <button type="button" class="modal-close" onclick="fecharModal('modalCheckout')">✕</button>
+            
+            <div id="telaPixCheckout">
+                <h2 style="margin-top:0; color: #38bdf8; text-align: center; font-size: 1.4rem;">🛒 Finalizar Pedido via Pix</h2>
+                
+                <div style="background: #1f2937; padding: 12px; border-radius: 8px; margin: 10px 0;">
+                    <p style="margin: 5px 0;"><strong>Produto:</strong> <span id="modalNomeItem" style="color: #4ade80;">-</span></p>
+                    <p style="margin: 5px 0;"><strong>Valor:</strong> <span id="modalPrecoItem" style="color: #4ade80;">-</span></p>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem;">Seu Nick/Usuário no Roblox:</label>
+                    <input type="text" id="nickRoblox" placeholder="Ex: PlayerRoblox123" class="calc-input" style="margin-bottom: 0;">
+                </div>
+
+                <!-- ESCOLHA DA CONTA -->
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem;">Escolha a Conta para Entrega:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                        <button type="button" onclick="selecionarConta('polar202530')" id="btn_polar202530" class="btn-conta" style="background: #0b0f19; border: 1px solid #374151; color: #fff; padding: 6px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">polar202530</button>
+                        <button type="button" onclick="selecionarConta('xxxmatheus606')" id="btn_xxxmatheus606" class="btn-conta" style="background: #0b0f19; border: 1px solid #374151; color: #fff; padding: 6px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">xxxmatheus606</button>
+                        <button type="button" onclick="selecionarConta('gustavo27893574')" id="btn_gustavo27893574" class="btn-conta" style="background: #0b0f19; border: 1px solid #374151; color: #fff; padding: 6px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; grid-column: span 2;">gustavo27893574</button>
+                    </div>
+                </div>
+
+                <span id="erroNick" style="color: #ef4444; font-size: 0.8rem; display: none; margin-bottom: 10px; font-weight: bold; text-align: center;"></span>
+
+                <div style="text-align: center; background: #ffffff; padding: 10px; border-radius: 8px; margin: 10px 0;">
+                    <img id="qrCodePix" src="" alt="QR Code Pix" style="width: 130px; height: 130px; display: block; margin: 0 auto; object-fit: contain;">
+                </div>
+
+                <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 3px; text-align: center;">Chave Pix (Copie e cole no app do banco):</p>
+                <div class="pix-box">
+                    <strong style="color: #38bdf8; font-size: 0.75rem;" id="chavePixTexto">87dd75f5-85e4-438f-8921-6d31d0a286d5</strong>
+                </div>
+
+                <button type="button" onclick="copiarPix()" style="background: #2563eb; color: white; border: none; width: 100%; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 6px;">Copiar Chave Pix</button>
+                <button type="button" id="btnConcluirPedido" onclick="confirmarPedido()" style="background: #059669; color: white; border: none; width: 100%; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer;">Já paguei / Concluir Pedido</button>
+            </div>
+
+            <div id="telaSucessoCheckout" style="display: none; text-align: center; padding: 10px 0;">
+                <div style="width: 70px; height: 70px; background: rgba(34, 197, 94, 0.15); border: 2px solid #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                    <span style="color: #22c55e; font-size: 2.5rem; font-weight: bold; line-height: 1;">✓</span>
+                </div>
+                <h2 style="color: #22c55e; margin: 0 0 10px 0; font-size: 1.5rem;">Pedido Confirmado!</h2>
+                <p style="color: #cbd5e1; font-size: 0.95rem; margin-bottom: 15px;">Seu pagamento foi registrado. Nossa equipe já está processando a entrega.</p>
+                <button type="button" onclick="fecharModal('modalCheckout')" style="background: #22c55e; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">Concluir e Voltar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let contaEscolhidaParaEntrega = "";
+
+        function abrirCheckoutCalculadora() {
+            let itemTexto = "{{ item }} (Qtd: {{ qtd }})";
+            let precoTexto = "R$ {{ total }}";
+
+            document.getElementById('modalNomeItem').innerText = itemTexto;
+            document.getElementById('modalPrecoItem').innerText = precoTexto;
+            document.getElementById('erroNick').style.display = 'none'; 
+            document.getElementById('nickRoblox').value = ''; 
+            contaEscolhidaParaEntrega = "";
+            
+            document.querySelectorAll('.btn-conta').forEach(btn => {
+                btn.style.background = '#0b0f19';
+                btn.style.borderColor = '#374151';
+                btn.style.color = '#fff';
+            });
+
+            document.getElementById('telaPixCheckout').style.display = 'block';
+            document.getElementById('telaSucessoCheckout').style.display = 'none';
+            
+            let chavePix = document.getElementById('chavePixTexto').innerText.trim();
+            document.getElementById('qrCodePix').src = "https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=" + encodeURIComponent(chavePix);
+            document.getElementById('modalCheckout').style.display = 'flex';
+        }
+
+        function selecionarConta(nomeConta) {
+            contaEscolhidaParaEntrega = nomeConta;
+            document.querySelectorAll('.btn-conta').forEach(btn => {
+                btn.style.background = '#0b0f19';
+                btn.style.borderColor = '#374151';
+                btn.style.color = '#fff';
+            });
+            let btnAtivo = document.getElementById('btn_' + nomeConta);
+            if(btnAtivo) {
+                btnAtivo.style.background = '#059669';
+                btnAtivo.style.borderColor = '#22c55e';
+            }
+            document.getElementById('erroNick').style.display = 'none';
+        }
+
+        function fecharModal(idModal) { 
+            document.getElementById(idModal).style.display = 'none'; 
+        }
+
+        function copiarPix() {
+            navigator.clipboard.writeText(document.getElementById('chavePixTexto').innerText).then(() => {
+                alert("Chave Pix copiada com sucesso!");
+            });
+        }
+
+        function confirmarPedido() {
+            var nick = document.getElementById('nickRoblox').value.trim();
+            var erroSpan = document.getElementById('erroNick');
+            var produto = document.getElementById('modalNomeItem').innerText;
+            var preco = document.getElementById('modalPrecoItem').innerText;
+
+            if (nick === "") {
+                erroSpan.innerText = "Por favor, informe seu Nick do Roblox!";
+                erroSpan.style.display = 'block';
+                return;
+            }
+            if (contaEscolhidaParaEntrega === "") {
+                erroSpan.innerText = "Por favor, selecione uma conta para a entrega!";
+                erroSpan.style.display = 'block';
+                return;
+            }
+            erroSpan.style.display = 'none';
+            
+            var btn = document.getElementById('btnConcluirPedido');
+            btn.disabled = true;
+            btn.innerText = "Processando...";
+
+            fetch('/enviar_pedido', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nick: nick, produto: produto, preco: preco, conta_entrega: contaEscolhidaParaEntrega })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.sucesso) {
+                    document.getElementById('telaPixCheckout').style.display = 'none';
+                    document.getElementById('telaSucessoCheckout').style.display = 'block';
+                } else {
+                    alert("Erro ao salvar pedido: " + data.mensagem);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Erro de conexão.");
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = "Já paguei / Concluir Pedido";
+            });
+        }
+    </script>
+    <!-- Novo Rodapé Profissional de 3 Colunas -->
+    <footer class="footer-site">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo">🎯 Sniper Arena Store</div>
+                <p class="footer-desc">Produtos digitais para jogos com entrega online e suporte ao cliente.</p>
+                <p class="footer-atendimento-titulo">Atendimento todos os dias</p>
+                <p class="footer-atendimento-hora">09:00 às 20:30</p>
+            </div>
+            <div class="footer-col">
+                <h3>Informações</h3>
+                <ul class="footer-links">
+                    <li><a href="/">Início</a></li>
+                    <li><a href="/termos">Termos e Condições</a></li>
+                    <li><a href="/privacidade">Política de Privacidade</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Precisa de ajuda?</h3>
+                <p class="footer-subtext">Clique em um dos canais abaixo para falar com a gente.</p>
+                <div class="footer-cards-ajuda">
+                    <a href="https://discord.gg/ubEDvqwfsx" target="_blank" class="card-ajuda discord">
+                        <span>💬 Suporte Ativo</span>
+                        <strong>DISCORD</strong>
+                    </a>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <hr class="footer-divider">
+        <div class="footer-bottom">
+            <div class="footer-info-legal">
+                <p><strong>Loja Oficial Sniper Arena — Renan de S. Prates</strong></p>
+                <p class="aviso-roblox">A Sniper Arena Store é uma loja independente e não possui vínculo oficial, patrocínio ou afiliação com a Roblox Corporation ou com os desenvolvedores dos jogos mencionados neste site.</p>
+            </div>
+            <div class="footer-copyright">
+                <p>© 2026 Loja Sniper Arena. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
