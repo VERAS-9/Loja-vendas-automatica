@@ -21,4 +21,4 @@ Uma loja de vendas automáticas para itens de jogos, desenvolvida do zero com fo
 - **Deploy:** Discloud (Hospedagem em nuvem).
 
 ---
-*Desenvolvido por [Seu Nome Completo ou VERAS-9]*
+*Desenvolvido por [Givanilson l. veras]*
